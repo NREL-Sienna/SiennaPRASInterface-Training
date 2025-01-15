@@ -5,38 +5,22 @@ import PowerSystems
 import PowerSystemCaseBuilder
 import CSV
 import DataFrames
-import TimeSeries: TimeArray
-import Dates: DateTime, Hour, TimePeriod
-import TypeTree: tt 
+import TimeSeries
+import Dates
+import TypeTree: tt
+import SiennaPRASInterface
 
 const PSY = PowerSystems
 const PSCB = PowerSystemCaseBuilder
-
-##############################################
-# Converting FOR and MTTR to λ and μ
-##############################################
-function rate_to_probability(for_gen::Float64, mttr::Int64)
-    if (for_gen > 1.0)
-        for_gen = for_gen / 100
-    end
-
-    if ~(mttr == 0)
-        μ = 1 / mttr
-    else # MTTR of 0.0 doesn't make much sense.
-        μ = 1.0
-    end
-    λ = (μ * for_gen) / (1 - for_gen)
-
-    return (λ=λ, μ=μ)
-end
-
+const TS = TimeSeries
+const SPI = SiennaPRASInterface
 ##############################################
 # SupplementalAttributes and Sienna\Data way 
 # of handling outage data
 ##############################################
-docs_dir = joinpath(pkgdir(PowerSystems), "docs", "src", "tutorials", "utils"); 
-include(joinpath(docs_dir, "docs_utils.jl")); 
-print(join(tt(PSY.SupplementalAttribute), "")) 
+docs_dir = joinpath(pkgdir(PowerSystems), "docs", "src", "tutorials", "utils");
+include(joinpath(docs_dir, "docs_utils.jl"));
+print(join(tt(PSY.SupplementalAttribute), ""))
 
 ###########################################
 # Augment RTS-GMLC System with outage data so
@@ -55,7 +39,7 @@ PSY.set_units_base_system!(rts_da_sys, "natural_units")
 gen_for_data = CSV.read("gen.csv", DataFrames.DataFrame);
 
 for row in DataFrames.eachrow(gen_for_data)
-    λ, μ = rate_to_probability(row.FOR, row["MTTR Hr"])
+    λ, μ = SPI.rate_to_probability(row.FOR, row["MTTR Hr"])
     transition_data = PSY.GeometricDistributionForcedOutage(;
         mean_time_to_recovery=row["MTTR Hr"],
         outage_transition_probability=λ,
@@ -70,4 +54,64 @@ for row in DataFrames.eachrow(gen_for_data)
     end
 end
 
-PSY.to_json(rts_da_sys, "System_data/RTS_GMLC_DA_with_static_outage_data.json", pretty = true)
+# Show SupplementalAttribute
+first(
+    PSY.get_supplemental_attributes(
+        PSY.GeometricDistributionForcedOutage,
+        first(PSY.get_available_components(PSY.ThermalGen, rts_da_sys)),
+    ),
+)
+
+PSY.to_json(rts_da_sys, "System_data/RTS_GMLC_DA_with_static_outage_data.json", pretty=true)
+
+# Adding time series of to RTS System
+#rts_sys = PSY.System("System_Data/RTS_GMLC_DA_with_static_outage_data.json", time_series_directory = "System_Data/ts_temp/");
+rts_test_outage_ts_data =
+    CSV.read("RTS_Test_Outage_Time_Series_Data.csv", DataFrames.DataFrame);
+
+# Time series timestamps
+filter_func = x -> (typeof(x) <: PSY.StaticTimeSeries)
+all_ts = PSY.get_time_series_multiple(rts_da_sys, filter_func)
+ts_timestamps = TS.timestamp(first(all_ts).data)
+first_timestamp = first(ts_timestamps)
+
+# Add λ and μ time series 
+for row in DataFrames.eachrow(rts_test_outage_ts_data)
+    comp = PSY.get_component(PSY.Generator, rts_da_sys, row.Unit)
+    λ_vals = Float64[]
+    μ_vals = Float64[]
+    for i in range(0, length=12)
+        next_timestamp = first_timestamp + Dates.Month(i)
+        λ, μ = SPI.rate_to_probability(row[3 + i], 48)
+        append!(λ_vals, fill(λ, (Dates.daysinmonth(next_timestamp) * 24)))
+        append!(μ_vals, fill(μ, (Dates.daysinmonth(next_timestamp) * 24)))
+    end
+    PSY.add_time_series!(
+        rts_da_sys,
+        first(PSY.get_supplemental_attributes(PSY.GeometricDistributionForcedOutage, comp)),
+        PSY.SingleTimeSeries(
+            "outage_probability",
+            TimeSeries.TimeArray(ts_timestamps, λ_vals),
+        ),
+    )
+    PSY.add_time_series!(
+        rts_da_sys,
+        first(PSY.get_supplemental_attributes(PSY.GeometricDistributionForcedOutage, comp)),
+        PSY.SingleTimeSeries(
+            "recovery_probability",
+            TimeSeries.TimeArray(ts_timestamps, μ_vals),
+        ),
+    )
+    @info "Added outage probability and recovery probability time series to supplemental attribute of $(row["Unit"]) generator"
+end
+
+# Show SupplementalAttribute
+supp_attr = first(
+    PSY.get_supplemental_attributes(
+        PSY.GeometricDistributionForcedOutage,
+        first(PSY.get_available_components(PSY.ThermalGen, rts_da_sys)),
+    ),
+)
+PSY.get_time_series_array(PSY.SingleTimeSeries, supp_attr, "outage_probability")
+
+PSY.to_json(rts_da_sys, "System_data/RTS_GMLC_DA_with_outage_ts_data.json", pretty=true)
