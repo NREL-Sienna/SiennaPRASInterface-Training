@@ -46,7 +46,7 @@ for row in DataFrames.eachrow(gen_for_data)
     )
     comp = PSY.get_component(PSY.Generator, rts_da_sys, row["GEN UID"])
 
-    if ~(isnothing(comp))
+    if !(isnothing(comp))
         PSY.add_supplemental_attribute!(rts_da_sys, comp, transition_data)
         @info "Added outage data supplemental attribute to $(row["GEN UID"]) generator"
     else
