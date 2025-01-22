@@ -8,3 +8,9 @@ PowerSystems = "bcd98974-b02a-5e2f-9ee0-a103f5c450dd"
 SiennaPRASInterface = "4b496c86-8d00-441d-b504-079c710e0aa7"
 TimeSeries = "9e3dc215-6440-5c97-bce1-76c03772f85e"
 TypeTree = "04da0e3b-1cad-4b2c-a963-fc1602baf1af"
+
+[compat]
+InfrastructureSystems = "2.4.1"
+PowerSystems = "^4.5"
+SiennaPRASInterface = "1.0"
+julia = "^1.6"

@@ -7,7 +7,11 @@ import PowerSystems
 const SPI = SiennaPRASInterface
 const PSY = PowerSystems
 
-rts_sys = PSY.System("System_Data/RTS_GMLC_DA_with_static_outage_data.json", time_series_directory = "System_Data/ts_temp", time_series_in_memory = true);
+rts_sys = PSY.System(
+    "System_Data/RTS_GMLC_DA_with_static_outage_data.json",
+    time_series_directory="System_Data/ts_temp",
+    time_series_in_memory=true,
+);
 
 supp_attr = first(
     PSY.get_supplemental_attributes(
@@ -38,7 +42,7 @@ storage_energy.energy_mean
 rts_ts_sys = PSY.System(
     "System_Data/RTS_GMLC_DA_with_outage_ts_data.json",
     time_series_directory="System_Data/ts_temp",
-    time_series_in_memory = true
+    time_series_in_memory=true,
 );
 
 supp_attr = first(
