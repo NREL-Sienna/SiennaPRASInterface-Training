@@ -62,7 +62,12 @@ first(
     ),
 )
 
-PSY.to_json(rts_da_sys, "System_data/RTS_GMLC_DA_with_static_outage_data.json", pretty=true)
+PSY.to_json(
+    rts_da_sys,
+    "System_data/RTS_GMLC_DA_with_static_outage_data.json",
+    pretty=true,
+    force=true,
+)
 
 # Adding time series of to RTS System
 #rts_sys = PSY.System("System_Data/RTS_GMLC_DA_with_static_outage_data.json", time_series_directory = "System_Data/ts_temp/");
@@ -114,4 +119,9 @@ supp_attr = first(
 )
 PSY.get_time_series_array(PSY.SingleTimeSeries, supp_attr, "outage_probability")
 
-PSY.to_json(rts_da_sys, "System_data/RTS_GMLC_DA_with_outage_ts_data.json", pretty=true)
+PSY.to_json(
+    rts_da_sys,
+    "System_data/RTS_GMLC_DA_with_outage_ts_data.json",
+    pretty=true,
+    force=true,
+)

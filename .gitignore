@@ -31,6 +31,8 @@ Manifest.toml
 
 # Folders and Files 
 System_Data/
+G100/Gen_data/
+G100/GUAM_Gens_Stor_PV_20241104_182442/
 
 
 # Byte-compiled / optimized / DLL files
