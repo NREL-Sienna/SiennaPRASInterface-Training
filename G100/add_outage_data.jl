@@ -9,7 +9,6 @@ import TimeSeries
 import Dates
 
 const SPI = SiennaPRASInterface
-const SPI_CC = SPI.PRAS.CapacityCredit
 const PSY = PowerSystems
 const DF = DataFrames
 const SD = StringDistances

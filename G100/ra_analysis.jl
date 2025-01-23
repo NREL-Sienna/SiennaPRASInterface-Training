@@ -3,9 +3,10 @@
 import SiennaPRASInterface
 import PowerSystems
 import StatsBase
+import PRASCapacityCredits
 
 const SPI = SiennaPRASInterface
-const SPI_CC = SPI.PRAS.CapacityCredit
+const PCC = PRASCapacityCredits
 const PSY = PowerSystems
 const SB = StatsBase
 
@@ -13,18 +14,25 @@ sys = PSY.System(
     "GUAM_Gens_Stor_PV_20241104_182442/GUAM_Gens_Stor_PV_20241104_182442_Static_FOR.json",
     runchecks=false,
 )
+
+first(
+    PSY.get_supplemental_attributes(
+        PSY.GeometricDistributionForcedOutage,
+        first(PSY.get_available_components(PSY.ThermalGen, sys)),
+    ),
+)
 # Static FOR Data from Four-Year Average
 # Run PRAS using SPI
-num_samples = 100000
+num_samples = 1000
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
-shortfall, surplus, storage_energy = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
+shortfall, surplus, storage_energy = SPI.assess(
     sys,
     PSY.Area,
     sequential_monte_carlo,
-    SPI.PRAS.Shortfall(),
-    SPI.PRAS.Surplus(),
-    SPI.PRAS.StorageEnergy(),
+    SPI.Shortfall(),
+    SPI.Surplus(),
+    SPI.StorageEnergy(),
 )
 # Access Results
 SPI.EUE(shortfall)
@@ -38,17 +46,25 @@ sys = PSY.System(
     runchecks=false,
 );
 
+supp_attr = first(
+    PSY.get_supplemental_attributes(
+        PSY.GeometricDistributionForcedOutage,
+        first(PSY.get_available_components(PSY.ThermalGen, sys)),
+    ),
+)
+PSY.get_time_series_array(PSY.SingleTimeSeries, supp_attr, "outage_probability")
+
 # Run PRAS using SPI
-num_samples = 100000
+num_samples = 1000
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
-shortfall, surplus, storage_energy = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
+shortfall, surplus, storage_energy = SPI.assess(
     sys,
     PSY.Area,
     sequential_monte_carlo,
-    SPI.PRAS.Shortfall(),
-    SPI.PRAS.Surplus(),
-    SPI.PRAS.StorageEnergy(),
+    SPI.Shortfall(),
+    SPI.Surplus(),
+    SPI.StorageEnergy(),
 )
 
 # Access Results
@@ -65,17 +81,24 @@ sys = PSY.System(
     runchecks=false,
 );
 
+first(
+    PSY.get_supplemental_attributes(
+        PSY.GeometricDistributionForcedOutage,
+        first(PSY.get_available_components(PSY.ThermalGen, sys)),
+    ),
+)
+
 # Run PRAS using SPI
-num_samples = 100000
+num_samples = 1000
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
-shortfall, surplus, storage_energy = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
+shortfall, surplus, storage_energy = SPI.assess(
     sys,
     PSY.Area,
     sequential_monte_carlo,
-    SPI.PRAS.Shortfall(),
-    SPI.PRAS.Surplus(),
-    SPI.PRAS.StorageEnergy(),
+    SPI.Shortfall(),
+    SPI.Surplus(),
+    SPI.StorageEnergy(),
 )
 # Access Results
 SPI.EUE(shortfall)
@@ -90,17 +113,25 @@ sys = PSY.System(
     runchecks=false,
 );
 
+supp_attr = first(
+    PSY.get_supplemental_attributes(
+        PSY.GeometricDistributionForcedOutage,
+        first(PSY.get_available_components(PSY.ThermalGen, sys)),
+    ),
+)
+
+PSY.get_time_series_array(PSY.SingleTimeSeries, supp_attr, "outage_probability")
 # Run PRAS using SPI
-num_samples = 100000
+num_samples = 1000
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
-shortfall, surplus, storage_energy = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
+shortfall, surplus, storage_energy = SPI.assess(
     sys,
     PSY.Area,
     sequential_monte_carlo,
-    SPI.PRAS.Shortfall(),
-    SPI.PRAS.Surplus(),
-    SPI.PRAS.StorageEnergy(),
+    SPI.Shortfall(),
+    SPI.Surplus(),
+    SPI.StorageEnergy(),
 )
 
 # Access Results
@@ -112,18 +143,18 @@ storage_energy.energy_mean
 # GeneratorAvailability
 # Run PRAS analysis and get generator availability for every sample
 # Only getting generator availability because storages don't have any outage data
-num_samples = 10000
+num_samples = 100
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
-shortfall, surplus, storage_energy, shortfall_samples, gen_availability = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=false, seed=1)
+shortfall, surplus, storage_energy, shortfall_samples, gen_availability = SPI.assess(
     sys,
     PSY.Area,
     sequential_monte_carlo,
-    SPI.PRAS.Shortfall(),
-    SPI.PRAS.Surplus(),
-    SPI.PRAS.StorageEnergy(),
-    SPI.PRAS.ShortfallSamples(),
-    SPI.PRAS.GeneratorAvailability(),
+    SPI.Shortfall(),
+    SPI.Surplus(),
+    SPI.StorageEnergy(),
+    SPI.ShortfallSamples(),
+    SPI.GeneratorAvailability(),
 )
 
 sample_idx = sortperm(shortfall_samples[], rev=true)
@@ -145,13 +176,13 @@ PSY.remove_component!(sys, kepco_pv_1_gen)
 base_pras_sys = SPI.generate_pras_system(sys, PSY.Area);
 
 # EFC
-num_samples = 10000
+num_samples = 100
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=true, seed=1)
-cc = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=true, seed=1)
+cc = SPI.assess(
     base_pras_sys,
     augmented_pras_sys,
-    SPI_CC.EFC{SPI.PRAS.EUE}(
+    PCC.EFC{SPI.EUE}(
         kepco_pv_1_gen_cap,
         "Region",
         p_value=0.01,
@@ -169,7 +200,7 @@ sequential_monte_carlo =
 cc = SPI.PRAS.assess(
     base_pras_sys,
     augmented_pras_sys,
-    SPI_CC.ELCC{SPI.PRAS.EUE}(
+    PCC.ELCC{SPI.PRAS.EUE}(
         kepco_pv_1_gen_cap,
         "Region",
         p_value=0.01,
@@ -200,17 +231,11 @@ base_pras_sys = SPI.generate_pras_system(sys, PSY.Area);
 # EFC
 num_samples = 10000
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=true, seed=1)
-cc = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=true, seed=1)
+cc = SPI.assess(
     base_pras_sys,
     augmented_pras_sys,
-    SPI_CC.EFC{SPI.PRAS.EUE}(
-        guam_pv_gen_cap,
-        "Region",
-        p_value=0.01,
-        capacity_gap=1,
-        verbose=true,
-    ),
+    PCC.EFC{SPI.EUE}(guam_pv_gen_cap, "Region", p_value=0.01, capacity_gap=1, verbose=true),
     sequential_monte_carlo,
 )
 cc_lower, cc_upper = extrema(cc)
@@ -218,11 +243,11 @@ cc_lower, cc_upper = extrema(cc)
 # ELCC
 num_samples = 10000
 sequential_monte_carlo =
-    SPI.PRAS.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=true, seed=1)
-cc = SPI.PRAS.assess(
+    SPI.SequentialMonteCarlo(samples=num_samples, threaded=true, verbose=true, seed=1)
+cc = SPI.assess(
     base_pras_sys,
     augmented_pras_sys,
-    SPI_CC.ELCC{SPI.PRAS.EUE}(
+    PCC.ELCC{SPI.EUE}(
         guam_pv_gen_cap,
         "Region",
         p_value=0.01,
